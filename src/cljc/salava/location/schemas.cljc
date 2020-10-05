@@ -31,7 +31,8 @@
                                  :min_lat Lat
                                  :min_lng Lng
                                  (s/optional-key :user_name) s/Str
-                                 })
+                                 (s/optional-key :space_id) s/Int})
+
 
 (s/defschema explore-badge-query {:max_lat Lat
                                   :max_lng Lng
@@ -40,7 +41,8 @@
                                   (s/optional-key :tag_name) s/Str
                                   (s/optional-key :badge_name) s/Str
                                   (s/optional-key :issuer_name) s/Str
-                                  })
+                                  (s/optional-key :space_id) s/Int})
+
 
 (s/defschema lat-lng {:lat (s/maybe Lat) :lng (s/maybe Lng)})
 

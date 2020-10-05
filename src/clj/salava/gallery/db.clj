@@ -411,7 +411,19 @@
   (let [badge-content (select-common-badge-content {:id badge-content-id} (into {:result-set-fn first} (get-db ctx)))]
     (rename-keys badge-content {:image_file :image :name :title})))
 
-(defn gallery-stats [ctx last-login user-id]
+(defn gallery-stats-space [ctx last-login user-id space-id]
+  {:profiles {:all (gallery-profiles-count-space {:space_id space-id} (into {:result-set-fn first :row-fn :profiles_count} (get-db ctx)))
+              :since-last-visited (gallery-profiles-count-since-last-login-space {:space_id space-id :last_login last-login} (into {:result-set-fn first :row-fn :profiles_count} (get-db ctx)))}
+   :pages {:all (gallery-pages-count-space {:space_id space-id} (into {:result-set-fn first :row-fn :pages_count} (get-db ctx)))
+           :since-last-visited (gallery-pages-count-since-last-login-space {:space_id space-id :user_id user-id :last_login last-login} (into {:result-set-fn first :row-fn :pages_count} (get-db ctx)))}
+
+   :badges {:all (gallery-badges-count-space {:space_id space-id} (into {:result-set-fn first :row-fn :badges_count} (get-db ctx)))
+            :since-last-visited (gallery-badges-count-since-last-login-space {:user_id user-id :last_login last-login :space_id space-id} (into {:result-set-fn first :row-fn :badges_count} (get-db ctx)))}
+   :map {:all (all-users-on-map-count-space {:space_id space-id} (into {:result-set-fn first :row-fn :users_count :space_id space-id} (get-db ctx)))}})
+
+(defn gallery-stats [ctx last-login user-id space-id]
+ (if (and space-id (pos? space-id))
+  (gallery-stats-space ctx last-login user-id space-id)
   {:profiles {:all (gallery-profiles-count {} (into {:result-set-fn first :row-fn :profiles_count} (get-db ctx)))
               :since-last-visited (gallery-profiles-count-since-last-login {:last_login last-login} (into {:result-set-fn first :row-fn :profiles_count} (get-db ctx)))}
    :pages {:all (gallery-pages-count {} (into {:result-set-fn first :row-fn :pages_count} (get-db ctx)))
@@ -419,7 +431,7 @@
 
    :badges {:all (gallery-badges-count {} (into {:result-set-fn first :row-fn :badges_count} (get-db ctx)))
             :since-last-visited (gallery-badges-count-since-last-login {:user_id user-id :last_login last-login} (into {:result-set-fn first :row-fn :badges_count} (get-db ctx)))}
-   :map {:all (all-users-on-map-count {} (into {:result-set-fn first :row-fn :users_count} (get-db ctx)))}})
+   :map {:all (all-users-on-map-count {} (into {:result-set-fn first :row-fn :users_count} (get-db ctx)))}}))
 
 (defn public-by-user [ctx kind user-id current-user-id]
   (let [visibility (if current-user-id "internal" "public")]

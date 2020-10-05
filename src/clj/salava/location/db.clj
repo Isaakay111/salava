@@ -73,14 +73,26 @@
                            (dissoc :user_lat :badge_lat :user_lng :badge_lng)))))})
 
 
-(defn explore-filters [ctx logged-in?]
+#_(defn explore-filters [ctx logged-in?]
+    (let [opt (if logged-in?
+                {:min_pub 0 :visibility ["public" "internal"]}
+                {:min_pub 1 :visibility ["public"]})]
+      {:tag_name    (sort (select-explore-taglist    opt (u/get-db-col ctx :tag)))
+       :badge_name  (sort (select-explore-badgelist  opt (u/get-db-col ctx :name)))
+       :issuer_name (sort (select-explore-issuerlist opt (u/get-db-col ctx :name)))}))
+
+(defn explore-filters [ctx logged-in? space-id]
   (let [opt (if logged-in?
               {:min_pub 0 :visibility ["public" "internal"]}
               {:min_pub 1 :visibility ["public"]})]
-    {:tag_name    (sort (select-explore-taglist    opt (u/get-db-col ctx :tag)))
-     :badge_name  (sort (select-explore-badgelist  opt (u/get-db-col ctx :name)))
-     :issuer_name (sort (select-explore-issuerlist opt (u/get-db-col ctx :name)))}))
+    (if (and space-id (pos? space-id))
+      {:tag_name    (sort (select-explore-taglist-space    (assoc opt :space_id space-id) (u/get-db-col ctx :tag)))
+       :badge_name  (sort (select-explore-badgelist-space  (assoc opt :space_id space-id) (u/get-db-col ctx :name)))
+       :issuer_name (sort (select-explore-issuerlist-space (assoc opt :space_id space-id) (u/get-db-col ctx :name)))}
 
+      {:tag_name    (sort (select-explore-taglist    opt (u/get-db-col ctx :tag)))
+       :badge_name  (sort (select-explore-badgelist  opt (u/get-db-col ctx :name)))
+       :issuer_name (sort (select-explore-issuerlist opt (u/get-db-col ctx :name)))})))
 
 (defn explore-list-users [ctx logged-in? opt]
   (let [;; Get all user ids in provided map box
@@ -93,7 +105,10 @@
           (conj (fn [ids] (select-explore-user-ids-public {:user ids} (u/get-db-col ctx :id))))
 
           (not (string/blank? (:user_name opt)))
-          (conj (fn [ids] (select-explore-user-ids-name {:user ids :name (str "%" (:user_name opt) "%")} (u/get-db-col ctx :id)))))
+          (conj (fn [ids] (select-explore-user-ids-name {:user ids :name (str "%" (:user_name opt) "%")} (u/get-db-col ctx :id))))
+
+          (and (:space_id opt) (pos? (:space_id opt)))
+          (conj (fn [ids] (select-explore-user-ids-space {:user ids :space_id (:space_id opt)} (u/get-db-col ctx :id)))))
 
         ;; Get final filtered user id list
         filtered-user-ids
@@ -129,7 +144,10 @@
           (conj (fn [ids] (select-explore-badge-ids-name {:badge ids :name (str "%" (:badge_name opt) "%")} (u/get-db-col ctx :id))))
 
           (not (string/blank? (:issuer_name opt)))
-          (conj (fn [ids] (select-explore-badge-ids-issuer {:badge ids :issuer (str "%" (:issuer_name opt) "%")} (u/get-db-col ctx :id)))))
+          (conj (fn [ids] (select-explore-badge-ids-issuer {:badge ids :issuer (str "%" (:issuer_name opt) "%")} (u/get-db-col ctx :id))))
+
+          (and (:space_id opt) (pos? (:space_id opt)))
+          (conj (fn [ids] (select-explore-badge-ids-space {:badge ids :space_id (:space_id opt)} (u/get-db-col ctx :id)))))
 
 
 

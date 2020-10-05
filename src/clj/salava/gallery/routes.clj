@@ -144,7 +144,7 @@
                   :summary "Get gallery stats"
                   :auth-rules access/signed
                   :current-user current-user
-                  (ok (g/gallery-stats ctx (:last-visited current-user) (:id current-user))))
+                  (ok (g/gallery-stats ctx (:last-visited current-user) (:id current-user) (get-in current-user [:current-space :id] 0))))
 
              (GET "/recent" [userid kind]
                   :no-doc true

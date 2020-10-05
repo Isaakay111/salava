@@ -299,24 +299,64 @@ LIMIT :limit OFFSET :offset
 SELECT COUNT(DISTINCT ub.gallery_id) AS badges_count FROM user_badge ub
 WHERE ub.status = 'accepted' AND ub.deleted = 0 AND ub.revoked = 0 AND (ub.expires_on IS NULL OR ub.expires_on > UNIX_TIMESTAMP())
 
+--name: gallery-badges-count-space
+SELECT COUNT(DISTINCT ub.gallery_id) AS badges_count FROM user_badge ub
+INNER JOIN user_space us ON us.user_id = ub.user_id
+WHERE ub.status = 'accepted' AND ub.deleted = 0 AND ub.revoked = 0 AND (ub.expires_on IS NULL OR ub.expires_on > UNIX_TIMESTAMP())
+AND us.space_id = :space_id AND us.status = 'accepted'
+
+
 --name: gallery-pages-count
 SELECT COUNT(id) AS pages_count FROM page WHERE (visibility = 'public' OR visibility = 'internal') AND deleted = 0
 
+--name: gallery-pages-count-space
+SELECT COUNT(p.id) AS pages_count FROM page p
+INNER JOIN user_space us ON us.user_id = p.user_id
+WHERE (p.visibility = 'public' OR p.visibility = 'internal') AND p.deleted = 0
+AND us.space_id = :space_id AND us.status = 'accepted'
+
 --name: gallery-profiles-count
 SELECT COUNT(id) AS profiles_count FROM user WHERE (profile_visibility = 'public' OR profile_visibility = 'internal') AND deleted = 0 AND activated = 1
+
+--name: gallery-profiles-count-space
+SELECT COUNT(u.id) AS profiles_count FROM user u
+INNER JOIN user_space us ON us.user_id = u.id
+WHERE (u.profile_visibility = 'public' OR u.profile_visibility = 'internal') AND u.deleted = 0 AND u.activated = 1
+AND us.space_id = :space_id AND us.status = 'accepted'
+
 
 --name: gallery-badges-count-since-last-login
 SELECT COUNT(se.id) AS badges_count FROM social_event AS se
 JOIN user_badge AS ub ON se.object = ub.id
 WHERE se.verb = 'publish' AND se.type = 'badge' AND se.mtime > :last_login AND ub.deleted = 0 AND ub.revoked = 0 AND subject != :user_id
 
+--name: gallery-badges-count-since-last-login-space
+SELECT COUNT(se.id) AS badges_count FROM social_event AS se
+JOIN user_badge AS ub ON se.object = ub.id
+INNER JOIN user_space us ON us.user_id = ub.user_id
+WHERE se.verb = 'publish' AND se.type = 'badge' AND se.mtime > :last_login AND ub.deleted = 0 AND ub.revoked = 0 AND subject != :user_id
+AND us.space_id = :space_id AND us.status = 'accepted'
+
 --name: gallery-pages-count-since-last-login
 SELECT COUNT(se.id) AS pages_count FROM social_event AS se
 JOIN page AS p ON se.object = p.id
 WHERE se.verb = 'publish' AND se.type = 'page' AND se.mtime > :last_login AND p.deleted = 0 AND subject != :user_id
 
+--name: gallery-pages-count-since-last-login
+SELECT COUNT(se.id) AS pages_count FROM social_event AS se
+JOIN page AS p ON se.object = p.id
+INNER JOIN user_space us ON us.user_id = p.user_id
+WHERE se.verb = 'publish' AND se.type = 'page' AND se.mtime > :last_login AND p.deleted = 0 AND subject != :user_id
+AND us.space_id = :space_id AND us.status = 'accepted'
+
 --name: gallery-profiles-count-since-last-login
 SELECT COUNT(id) AS profiles_count FROM user WHERE (profile_visibility = 'public' OR profile_visibility = 'internal') AND deleted = 0 AND activated = 1 AND ctime > :last_login
+
+--name:gallery-profiles-count-since-last-login-space
+SELECT COUNT(u.id) AS profiles_count FROM user u
+INNER JOIN user_space us ON us.user_id = u.id
+WHERE (u.profile_visibility = 'public' OR u.profile_visibility = 'internal') AND u.deleted = 0 AND u.activated = 1 AND u.ctime > :last_login
+AND us.space_id = :space_id AND us.status = 'accepted' AND us.ctime > :last_login
 
 --name: select-gallery-tags
 SELECT DISTINCT t.tag FROM badge_content_tag t
@@ -443,6 +483,12 @@ LIMIT :limit;
 
 --name: all-users-on-map-count
 SELECT COUNT(id) AS users_count FROM user WHERE location_lng IS NOT NULL AND location_lat IS NOT NULL AND deleted = 0
+
+--name: all-users-on-map-count-space
+SELECT COUNT(DISTINCT u.id) AS users_count FROM user u
+INNER JOIN user_space us ON us.user_id = u.id
+WHERE u.location_lng IS NOT NULL AND u.location_lat IS NOT NULL AND u.deleted = 0
+AND us.space_id = :space_id AND us.status = 'accepted'
 
 --name: select-user-owns-badge-id
 SELECT user_id FROM user_badge WHERE gallery_id = :gallery_id AND user_id = :user_id AND status != 'declined' AND deleted = 0 AND revoked = 0

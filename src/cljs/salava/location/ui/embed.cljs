@@ -12,7 +12,8 @@
            [cemerick.url :as url]
            [clojure.string :refer [blank? join]]
            [salava.core.ui.share :refer [clipboard-button]]
-           [komponentit.autocomplete :as autocomplete]))
+           [komponentit.autocomplete :as autocomplete]
+           [reagent.session :as session]))
 
 (defn link-builder [state]
   (let [params (as-> {:issuer (get-in @state [:issuer :value] "") :badge (get-in @state [:badge :value] "") :tag (get-in @state [:tag :value] "") :lat (:lat @state) :long (:long @state)} m (remove (fn [[k v]] (blank? v)) m))
@@ -235,7 +236,8 @@
 
    (ajax/GET
      (path-for "/obpv1/location/explore/filters" false)
-     {:handler
+     {:params {:space_id (session/get-in [:user :current-space :id] 0)}
+      :handler
       (fn [data]
         (swap! state assoc-in [:tag    :autocomplete] (reduce (fn [coll v] (assoc coll v v)) {} (:tag_name    data)))
         (swap! state assoc-in [:badge  :autocomplete] (reduce (fn [coll v] (assoc coll v v)) {} (:badge_name  data)))

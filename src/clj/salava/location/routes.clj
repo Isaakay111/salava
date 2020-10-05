@@ -98,11 +98,18 @@
                   :current-user current-user
                   (ok (l/explore-list-badges ctx (some-> current-user :id pos?) params)))
 
+             #_(GET "/explore/filters" []
+                    :summary "Get list of tags, badge and issuer names available for public badges."
+                    :return ls/explore-filters
+                    :current-user current-user
+                    (ok (l/explore-filters ctx (some-> current-user :id pos?))))
+
              (GET "/explore/filters" []
                   :summary "Get list of tags, badge and issuer names available for public badges."
                   :return ls/explore-filters
+                  :query [params {:space_id s/Int}]
                   :current-user current-user
-                  (ok (l/explore-filters ctx (some-> current-user :id pos?))))
+                  (ok (l/explore-filters ctx (some-> current-user :id pos?) (:space_id params))))
 
              (GET "/explore/badges/embed" []
                   :no-doc true

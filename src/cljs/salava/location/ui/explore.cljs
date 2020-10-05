@@ -41,7 +41,8 @@
     (ajax/GET
      (path-for (str "/obpv1/location/explore/" kind) false)
      {:params (merge opt {:max_lat (.getNorth bounds) :max_lng (.getEast bounds)
-                          :min_lat (.getSouth bounds) :min_lng (.getWest bounds)})
+                          :min_lat (.getSouth bounds) :min_lng (.getWest bounds)
+                          :space_id (session/get-in [:user :current-space :id] 0)})
       :handler
       (fn [data]
         (.clearLayers layer-group)
@@ -207,7 +208,8 @@
                      :issuer {:value "" :autocomplete {}}})]
     (ajax/GET
      (path-for "/obpv1/location/explore/filters" false)
-     {:handler
+     {:params {:space_id (session/get-in [:user :current-space :id] 0)}
+      :handler
       (fn [data]
         (swap! state assoc-in [:tag    :autocomplete] (reduce (fn [coll v] (assoc coll v v)) {} (:tag_name    data)))
         (swap! state assoc-in [:badge  :autocomplete] (reduce (fn [coll v] (assoc coll v v)) {} (:badge_name  data)))

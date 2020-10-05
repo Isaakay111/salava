@@ -63,6 +63,10 @@ WHERE id IN (:user) AND location_public = 1 AND profile_visibility = 'public';
 SELECT id FROM user
 WHERE id IN (:user) AND CONCAT(first_name, ' ', last_name) LIKE :name;
 
+--name: select-explore-user-ids-space
+SELECT DISTINCT user_id FROM user_space
+WHERE user_id IN (:user) AND space_id = :space_id
+
 --name: select-explore-users
 SELECT id, first_name, last_name, profile_picture,
     location_lat AS lat, location_lng AS lng
@@ -106,6 +110,11 @@ INNER JOIN badge_issuer_content bc ON ub.badge_id = bc.badge_id
 INNER JOIN issuer_content c ON bc.issuer_content_id = c.id
 WHERE ub.id IN (:badge) AND c.name LIKE :issuer;
 
+--name: select-explore-badge-ids-space
+SELECT DISTINCT ub.id FROM user_badge ub
+INNER JOIN user_space us ON us.user_id = ub.user_id
+WHERE ub.id IN (:badge) AND us.space_id = :space_id AND us.status = 'accepted'
+
 --name: select-explore-badges
 SELECT ub.id, ub.user_id, ub.badge_id, ub.gallery_id,
     g.badge_name, g.badge_image, g.issuer_name,
@@ -141,6 +150,18 @@ WHERE u.location_public >= :min_pub AND ub.deleted = 0 AND ub.visibility IN (:vi
 ORDER BY ub.mtime
 LIMIT 2000;
 
+--name: select-explore-taglist-space
+SELECT DISTINCT t.tag FROM badge_content_tag t
+INNER JOIN badge_badge_content bc ON bc.badge_content_id = t.badge_content_id
+INNER JOIN user_badge ub ON bc.badge_id = ub.badge_id
+INNER JOIN user u ON ub.user_id = u.id
+INNER JOIN user_space us ON us.user_id = ub.user_id
+WHERE u.location_public >= :min_pub AND ub.deleted = 0 AND ub.visibility IN (:visibility) AND ub.status = 'accepted'
+    AND ((u.location_lat IS NOT NULL AND u.location_lng IS NOT NULL) OR (ub.location_lat IS NOT NULL AND ub.location_lng IS NOT NULL))
+    AND us.space_id = :space_id AND us.status = 'accepted'
+ORDER BY ub.mtime
+LIMIT 2000;
+
 --name: select-explore-badgelist
 SELECT DISTINCT c.name FROM badge_content c
 INNER JOIN badge_badge_content bc ON bc.badge_content_id = c.id
@@ -151,6 +172,18 @@ WHERE u.location_public >= :min_pub AND ub.deleted = 0 AND ub.visibility IN (:vi
 ORDER BY ub.mtime
 LIMIT 2000;
 
+--name: select-explore-badgelist-space
+SELECT DISTINCT c.name FROM badge_content c
+INNER JOIN badge_badge_content bc ON bc.badge_content_id = c.id
+INNER JOIN user_badge ub ON bc.badge_id = ub.badge_id
+INNER JOIN user u ON ub.user_id = u.id
+INNER JOIN user_space us ON us.user_id = ub.user_id
+WHERE u.location_public >= :min_pub AND ub.deleted = 0 AND ub.visibility IN (:visibility) AND ub.status = 'accepted'
+    AND ((u.location_lat IS NOT NULL AND u.location_lng IS NOT NULL) OR (ub.location_lat IS NOT NULL AND ub.location_lng IS NOT NULL))
+    AND us.space_id = :space_id AND us.status = 'accepted'
+ORDER BY ub.mtime
+LIMIT 2000;
+
 --name: select-explore-issuerlist
 SELECT DISTINCT c.name FROM issuer_content c
 INNER JOIN badge_issuer_content bc ON bc.issuer_content_id = c.id
@@ -158,5 +191,17 @@ INNER JOIN user_badge ub ON bc.badge_id = ub.badge_id
 INNER JOIN user u ON ub.user_id = u.id
 WHERE u.location_public >= :min_pub AND ub.deleted = 0 AND ub.visibility IN (:visibility) AND ub.status = 'accepted'
     AND ((u.location_lat IS NOT NULL AND u.location_lng IS NOT NULL) OR (ub.location_lat IS NOT NULL AND ub.location_lng IS NOT NULL))
+ORDER BY ub.mtime
+LIMIT 2000;
+
+--name: select-explore-issuerlist-space
+SELECT DISTINCT c.name FROM issuer_content c
+INNER JOIN badge_issuer_content bc ON bc.issuer_content_id = c.id
+INNER JOIN user_badge ub ON bc.badge_id = ub.badge_id
+INNER JOIN user u ON ub.user_id = u.id
+INNER JOIN user_space us ON us.user_id = ub.user_id
+WHERE u.location_public >= :min_pub AND ub.deleted = 0 AND ub.visibility IN (:visibility) AND ub.status = 'accepted'
+    AND ((u.location_lat IS NOT NULL AND u.location_lng IS NOT NULL) OR (ub.location_lat IS NOT NULL AND ub.location_lng IS NOT NULL))
+    AND us.space_id = :space_id AND us.status = 'accepted'
 ORDER BY ub.mtime
 LIMIT 2000;
