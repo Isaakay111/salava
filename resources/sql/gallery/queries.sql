@@ -309,7 +309,7 @@ AND us.space_id = :space_id AND us.status = 'accepted'
 --name: gallery-pages-count
 SELECT COUNT(id) AS pages_count FROM page WHERE (visibility = 'public' OR visibility = 'internal') AND deleted = 0
 
---name: gallery-pages-count-space
+--name: gallery-pages-count-space-space
 SELECT COUNT(p.id) AS pages_count FROM page p
 INNER JOIN user_space us ON us.user_id = p.user_id
 WHERE (p.visibility = 'public' OR p.visibility = 'internal') AND p.deleted = 0
@@ -342,7 +342,7 @@ SELECT COUNT(se.id) AS pages_count FROM social_event AS se
 JOIN page AS p ON se.object = p.id
 WHERE se.verb = 'publish' AND se.type = 'page' AND se.mtime > :last_login AND p.deleted = 0 AND subject != :user_id
 
---name: gallery-pages-count-since-last-login
+--name: gallery-pages-count-since-last-login-space
 SELECT COUNT(se.id) AS pages_count FROM social_event AS se
 JOIN page AS p ON se.object = p.id
 INNER JOIN user_space us ON us.user_id = p.user_id
